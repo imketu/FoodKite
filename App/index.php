@@ -9,7 +9,8 @@
  * or update this file path as needed.
  */
 require 'Slim/Slim.php';
-
+include_once('Zend/Cache.php');
+include_once('Libs/DatabaseAbstraction.Class.php');
 /**
  * Step 2: Instantiate the Slim application
  *
@@ -18,6 +19,7 @@ require 'Slim/Slim.php';
  * Refer to the online documentation for available settings.
  */
 $app = new Slim(array(
+										'templates.path' => './Templates',
 										'mode' => 'development'
 								));
 
@@ -35,6 +37,31 @@ $app->configureMode('development', function () use ($app) {
         'debug' => true
     ));
 });
+
+$app->config(array(
+    'foursqaureClientKey' => "2RQUQ00FWEYXU3H22VZFWYBXIIL1Y12GQOHMS0NTVMIYSSIN",
+    'foursqaureClientSecret' => "UUMORJWMLYSNDCJGG4D4DL4ITH1UVT2WGFXXKALJWSUDED3B"
+));
+
+
+
+/* set up cache resource*/
+$frontendOptions = array(
+ 'lifetime' => 57600, 
+ 'automatic_serialization' => true
+);
+
+$backendOptions = array(
+	  'cache_dir' => 'Data/' // Directory where to put the cache files
+);
+
+$app->cache = Zend_Cache::factory('Core',
+                           'File',
+                           $frontendOptions,
+                           $backendOptions);
+
+/* set up db resource*/
+$app->db = new DB('localhost', 'root', 'admin', 'FoodkiteDB');
 
 /**
  * Step 3: Define the Slim application routes
