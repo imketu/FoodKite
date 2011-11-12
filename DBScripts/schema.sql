@@ -3,7 +3,7 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='TRADITIONAL';
 
 DROP SCHEMA IF EXISTS `FoodkiteDB` ;
-CREATE SCHEMA IF NOT EXISTS `FoodkiteDB` DEFAULT CHARACTER SET latin1 COLLATE latin1_swedish_ci ;
+CREATE SCHEMA IF NOT EXISTS `FoodkiteDB` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci ;
 USE `FoodkiteDB` ;
 
 -- -----------------------------------------------------
@@ -12,12 +12,16 @@ USE `FoodkiteDB` ;
 DROP TABLE IF EXISTS `FoodkiteDB`.`PlaceType` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`PlaceType` (
-  `id` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `Type` VARCHAR(45) NOT NULL ,
+	`FoursquareCategoryId` VARCHAR(45) NOT NULL ,
   PRIMARY KEY (`id`) )
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=3000
+;
 
-CREATE UNIQUE INDEX `Name_UNIQUE` ON `FoodkiteDB`.`PlaceType` (`Type` ASC) ;
+CREATE INDEX `Name_indx` ON `FoodkiteDB`.`PlaceType` (`Type` ASC) ;
+CREATE UNIQUE INDEX `FoursquareCategoryId_UNIQUE` ON `FoodkiteDB`.`PlaceType` (`FoursquareCategoryId` ASC) ;
 
 
 -- -----------------------------------------------------
@@ -26,7 +30,7 @@ CREATE UNIQUE INDEX `Name_UNIQUE` ON `FoodkiteDB`.`PlaceType` (`Type` ASC) ;
 DROP TABLE IF EXISTS `FoodkiteDB`.`Place` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`Place` (
-  `id` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `Name` VARCHAR(45) NOT NULL ,
   `PlaceType` INT NOT NULL ,
   `FoursquareVenueId` VARCHAR(45) NOT NULL ,
@@ -36,9 +40,11 @@ CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`Place` (
     REFERENCES `FoodkiteDB`.`PlaceType` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=9999
+;
 
-CREATE UNIQUE INDEX `Name_UNIQUE` ON `FoodkiteDB`.`Place` (`Name` ASC) ;
+CREATE  INDEX `Name_INDX` ON `FoodkiteDB`.`Place` (`Name` ASC) ;
 
 CREATE INDEX `fk_Place_PlaceType` ON `FoodkiteDB`.`Place` (`PlaceType` ASC) ;
 
@@ -51,18 +57,19 @@ CREATE UNIQUE INDEX `FoursquareVenueId_UNIQUE` ON `FoodkiteDB`.`Place` (`Foursqu
 DROP TABLE IF EXISTS `FoodkiteDB`.`Menu` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`Menu` (
-  `id` INT NOT NULL ,
-  `Menu` VARCHAR(255) NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `Place` INT NOT NULL ,
   PRIMARY KEY (`id`) ,
-  CONSTRAINT `fk_SubMenu_Place1`
+  CONSTRAINT `fk_Menu_Place`
     FOREIGN KEY (`Place` )
     REFERENCES `FoodkiteDB`.`Place` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=4999
+;
 
-CREATE INDEX `fk_SubMenu_Place` ON `FoodkiteDB`.`Menu` (`Place` ASC) ;
+CREATE INDEX `fk_Menu_Place` ON `FoodkiteDB`.`Menu` (`Place` ASC) ;
 
 
 -- -----------------------------------------------------
@@ -71,10 +78,12 @@ CREATE INDEX `fk_SubMenu_Place` ON `FoodkiteDB`.`Menu` (`Place` ASC) ;
 DROP TABLE IF EXISTS `FoodkiteDB`.`MenuType` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`MenuType` (
-  `id` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `Type` VARCHAR(45) NOT NULL ,
   PRIMARY KEY (`id`) )
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=3000
+;
 
 CREATE UNIQUE INDEX `Name_UNIQUE` ON `FoodkiteDB`.`MenuType` (`Type` ASC) ;
 
@@ -85,11 +94,13 @@ CREATE UNIQUE INDEX `Name_UNIQUE` ON `FoodkiteDB`.`MenuType` (`Type` ASC) ;
 DROP TABLE IF EXISTS `FoodkiteDB`.`Item` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`Item` (
-  `id` INT NOT NULL ,
-  `name` VARCHAR(255) NULL ,
-  `Desctiption` TINYTEXT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(255) NULL ,
+  `Description` TINYTEXT NOT NULL ,
   PRIMARY KEY (`id`) )
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=999
+;
 
 CREATE UNIQUE INDEX `name_UNIQUE` ON `FoodkiteDB`.`Item` (`name` ASC) ;
 
@@ -100,26 +111,23 @@ CREATE UNIQUE INDEX `name_UNIQUE` ON `FoodkiteDB`.`Item` (`name` ASC) ;
 DROP TABLE IF EXISTS `FoodkiteDB`.`SubMenu` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`SubMenu` (
-  `id` INT NOT NULL ,
-  `Menu` VARCHAR(255) NULL ,
-  `MenueType` INT NOT NULL ,
-  `SubMenu` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `Menu` INT NOT NULL ,
+  `MenuType` INT NULL ,
+  `SubMenu` VARCHAR(255) NOT NULL ,
   PRIMARY KEY (`id`) ,
-  CONSTRAINT `fk_Menu_MenuType`
-    FOREIGN KEY (`MenueType` )
-    REFERENCES `FoodkiteDB`.`MenuType` (`id` )
-    ON DELETE NO ACTION
-    ON UPDATE NO ACTION,
-  CONSTRAINT `fk_Menu_SubMenu1`
-    FOREIGN KEY (`SubMenu` )
+  CONSTRAINT `fk_SubMenu_Menu`
+    FOREIGN KEY (`Menu` )
     REFERENCES `FoodkiteDB`.`Menu` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=999
+;
 
-CREATE INDEX `fk_Menu_MenueType` ON `FoodkiteDB`.`SubMenu` (`MenueType` ASC) ;
+CREATE INDEX `SubMenu_MenuType_INDEX` ON `FoodkiteDB`.`SubMenu` (`MenuType` ASC) ;
 
-CREATE INDEX `fk_Menu_SubMenu` ON `FoodkiteDB`.`SubMenu` (`SubMenu` ASC) ;
+CREATE INDEX `fk_SubMenu_Menu` ON `FoodkiteDB`.`SubMenu` (`Menu` ASC) ;
 
 
 -- -----------------------------------------------------
@@ -128,27 +136,37 @@ CREATE INDEX `fk_Menu_SubMenu` ON `FoodkiteDB`.`SubMenu` (`SubMenu` ASC) ;
 DROP TABLE IF EXISTS `FoodkiteDB`.`Dish` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`Dish` (
-  `id` INT NOT NULL ,
-  `SubMenu_id` INT NOT NULL ,
-  `Item_idItem` INT NOT NULL ,
-  `Price` DOUBLE NOT NULL ,
-  `Calories` INT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
+  `SubMenu` INT NULL ,
+	`Menu` INT NOT NULL ,
+  `Item` INT NOT NULL ,
+  `Price` DOUBLE  NULL ,
+  `Calories` DOUBLE NULL ,
   PRIMARY KEY (`id`) ,
-  CONSTRAINT `fk_SumbenueItemRelation_SubMenu1`
-    FOREIGN KEY (`SubMenu_id` )
+	CONSTRAINT `fk_Dish_Menu`
+    FOREIGN KEY (`Menu` )
+    REFERENCES `FoodkiteDB`.`Menu` (`id` )
+    ON DELETE NO ACTION
+    ON UPDATE NO ACTION,
+  CONSTRAINT `fk_Dish_SubMenu`
+    FOREIGN KEY (`SubMenu` )
     REFERENCES `FoodkiteDB`.`SubMenu` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION,
-  CONSTRAINT `fk_SumbenueItemRelation_Item1`
-    FOREIGN KEY (`Item_idItem` )
+  CONSTRAINT `fk_Dish_Item`
+    FOREIGN KEY (`Item` )
     REFERENCES `FoodkiteDB`.`Item` (`id` )
     ON DELETE NO ACTION
     ON UPDATE NO ACTION)
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=999
+;
 
-CREATE INDEX `fk_Dish_SubMenu` ON `FoodkiteDB`.`Dish` (`SubMenu_id` ASC) ;
+CREATE INDEX `fk_Dish_Menu` ON `FoodkiteDB`.`Dish` (`Menu` ASC) ;
 
-CREATE INDEX `fk_SumbenueItemRelation_Item` ON `FoodkiteDB`.`Dish` (`Item_idItem` ASC) ;
+CREATE INDEX `fk_Dish_SubMenu` ON `FoodkiteDB`.`Dish` (`SubMenu` ASC) ;
+
+CREATE INDEX `fk_Dish_Item` ON `FoodkiteDB`.`Dish` (`Item` ASC) ;
 
 
 -- -----------------------------------------------------
@@ -157,7 +175,7 @@ CREATE INDEX `fk_SumbenueItemRelation_Item` ON `FoodkiteDB`.`Dish` (`Item_idItem
 DROP TABLE IF EXISTS `FoodkiteDB`.`User` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`User` (
-  `UserId` INT NOT NULL ,
+  `UserId` INT NOT NULL AUTO_INCREMENT,
   `Handle` VARCHAR(45) NOT NULL ,
   `Pass` VARCHAR(45) NOT NULL ,
   `FoursquareId` VARCHAR(45) NULL ,
@@ -165,7 +183,9 @@ CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`User` (
   `TwitterId` VARCHAR(45) NULL ,
   `EmailId` VARCHAR(45) NULL ,
   PRIMARY KEY (`UserId`) )
-ENGINE = InnoDB;
+ENGINE = InnoDB
+AUTO_INCREMENT=1999
+;
 
 CREATE UNIQUE INDEX `Handle_UNIQUE` ON `FoodkiteDB`.`User` (`Handle` ASC) ;
 
@@ -176,7 +196,7 @@ CREATE UNIQUE INDEX `Handle_UNIQUE` ON `FoodkiteDB`.`User` (`Handle` ASC) ;
 DROP TABLE IF EXISTS `FoodkiteDB`.`TuckIn` ;
 
 CREATE  TABLE IF NOT EXISTS `FoodkiteDB`.`TuckIn` (
-  `id` INT NOT NULL ,
+  `id` INT NOT NULL AUTO_INCREMENT,
   `Dish` INT NOT NULL ,
   `User_UserId` INT NOT NULL ,
   PRIMARY KEY (`id`) ,

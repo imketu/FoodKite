@@ -15,13 +15,16 @@ $getAllPlaceData = function($place) use ($app){
 		$place->type->id=$foursquareCategorytype;
 	}
 	if(isset($place->type->id) && !empty($place->type->id)){
-		$placeId = $app->db->query("SELECT `id` FROM Place WHERE `FoursquareVenueId` = ?", array($place->fqid))->fetch(0);
-		if(empty($placeId)){
-			if($app->db->query("INSERT INTO `Place` (`Name`, `PlaceType`, `FoursquareVenueId`) VALUES(?, ?, ?)", array($place->name, $place->type->id, $place->fqid))->execute()){
+		$placeDetail = $app->db->query("SELECT `id`, `IsDeleted` FROM Place WHERE `FoursquareVenueId` = ?", array($place->fqid))->fetch(0);
+
+		if(!isset($placeDetail['id']) || empty($placeDetail['id'])){
+			if($app->db->query("INSERT INTO `Place` (`Name`, `PlaceType`, `FoursquareVenueId`, `Address`, `City`, `Country`, `Lat`, `Lng`) VALUES(?, ?, ?, ?, ?, ?, ?, ?)", array($place->name, $place->type->id, $place->fqid, $place->address, $place->city, $place->country, $place->lat, $place->lng))->execute()){
 				$place->id=	$app->db->last_id();
+				$place->isDeleted=0;
 			}
 		} else {
-			$place->id=$placeId;
+			$place->id=$placeDetail['id'];
+			$place->isDeleted=$placeDetail['IsDeleted'];
 		}
 		if(isset($place->id) && !empty($place->id)){
 			$returnPlace=$place;
@@ -31,7 +34,7 @@ $getAllPlaceData = function($place) use ($app){
 };
 
 $getManueForPlace = function($placeId) use ($app){
-	$menu = $app->db->query("SELECT M.id  as MenuId, M.Place as PlaceId,SM.id as SubMenuId, SM.SubMenu, MT.id as MenuTypeId, MT.Type as MenuType, C.DishCount FROM Menu M JOIN SubMenu SM ON SM.Menu=M.id LEFT JOIN MenuType MT ON MT.id=SM.MenuType JOIN (SELECT count(*) as DishCount, SubMenu from Dish GROUP BY SubMenu) as  C ON C.SubMenu = SM.id WHERE M.Place = ?", $placeId)->fetch();
+	$menu = $app->db->query("SELECT M.id  as MenuId, M.Place as PlaceId,SM.id as SubMenuId, SM.Name, C.DishCount FROM Menu M JOIN SubMenu SM ON SM.Menu=M.id  JOIN (SELECT count(*) as DishCount, SubMenu from Dish WHERE `ChildDishOfParent` IS NULL GROUP BY SubMenu) as  C ON C.SubMenu = SM.id WHERE M.IsPublished= 1 AND M.Place = ?", $placeId)->fetch();
 	$app->data=$menu;
 };
 
@@ -42,17 +45,19 @@ $getPlaceName = function($placeId) use ($app){
 
 
 
-
-
 //              Middlewares
 //======================================
 
 $discoverPlace = function() use ($app,$getAllPlaceData){
 
 	$places = array();
-	$lat="51.51283"; 
-	$long="-0.127505";
-	
+	if(isset($_COOKIE['user_latitude']) && isset($_COOKIE['user_longitude'])){
+		$lat=$_COOKIE['user_latitude']; 
+		$long=$_COOKIE['user_longitude'];
+	}else{
+		$lat="51.51283"; 
+		$long="-0.127505";
+	}
 	// Prepare parameters
 	$endpoint = "venues/search";
 	$params = array("ll"=>"$lat,$long");
@@ -71,7 +76,7 @@ $discoverPlace = function() use ($app,$getAllPlaceData){
 		// Perform a request to a public resource
 		$response = $foursquare->GetPublic($endpoint,$params);
 		$venues = json_decode($response);
-
+		
 		// Parse the Response
 		foreach($venues->response->groups as $group){
 			foreach($group->items as $venue){
@@ -89,8 +94,15 @@ $discoverPlace = function() use ($app,$getAllPlaceData){
 					$place->name = $venue->name;
 					$place->fqid = $venue->id;
 					$place->type = $placeType;
+					$place->address = isset($venue->location->address)? $venue->location->address:"";
+					$place->city = isset($venue->location->city)? $venue->location->city:"";
+					$place->country = isset($venue->location->country)? $venue->location->country:"";
+					$place->lat = $venue->location->lat;
+					$place->lng = $venue->location->lng;
 					$place=$getAllPlaceData($place);
-					array_push($places, $place);
+					if($place->isDeleted==0){
+						array_push($places, $place);
+					}
 				}
 			}
 		}
@@ -104,19 +116,18 @@ $discoverPlace = function() use ($app,$getAllPlaceData){
 };
 
 
-
-
-
 //            GET route
 //======================================
-$app->get('/place/discovery/(:lat/:long/)', $discoverPlace, function () use ($app){
-	$app->render('placeDiscovery.php', array("title"=> "Places near you", "places" => $app->data, "navbarValue" => 1) );
+$app->get('/place/discovery/(:lat/:long/)', $authenticateUsers, $discoverPlace, function () use ($app){
+	$logoutUrl = $app->facebook->getLogoutUrl();
+	$app->render('placeDiscovery.php', array("title"=> "Places near you", "logoutUrl" => $logoutUrl, "places" => $app->data, "navbarValue" => 1) );
 });
 
 
-$app->get('/place/menu/:placeId/',  function ($placeId) use ($app, $getManueForPlace, $getPlaceName) {
+$app->get('/place/menu/:placeId/', $authenticateUsers, function ($placeId) use ($app, $getManueForPlace, $getPlaceName) {
 	 $getManueForPlace($placeId);
-   $app->render('submenuList.php', array("title"=> $getPlaceName($placeId)." > Menu", "submenus" =>$app->data, "navbarValue" => 1, "backUrl" => "/place/discovery/") );
+	 $logoutUrl = $app->facebook->getLogoutUrl();
+   $app->render('submenuList.php', array("title"=> $getPlaceName($placeId)." > Menu", "logoutUrl" => $logoutUrl, "submenus" =>$app->data, "navbarValue" => 1, "backUrl" => "/place/discovery/") );
 });
 
 

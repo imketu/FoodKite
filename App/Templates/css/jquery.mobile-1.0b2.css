@@ -12,6 +12,24 @@
 * Dual licensed under the MIT (MIT-LICENSE.txt) and GPL (GPL-LICENSE.txt) licenses.
 */
 
+.loginPanel {
+    background: url("images/logo.png") no-repeat scroll center 0 transparent;
+		padding-top: 150px;
+}
+
+.signInButton {
+    background: url("images/facebook-connect.gif") repeat scroll 0 0 transparent;
+    border: medium none;
+    height: 25px;
+    width: 194px;
+		display: block;
+}
+
+.signInButton:hover, .twitterSignInButton:hover {
+    cursor: pointer;
+}
+
+
 
 /* A
 -----------------------------------------------------------------------------------------------------------*/

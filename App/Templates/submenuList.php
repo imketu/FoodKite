@@ -7,7 +7,7 @@
 			<ul data-role="listview" data-inset="true" data-theme="d">
 				<?php	foreach($submenus as $submenu){ ?>
 				<li>
-						<a href="<?php echo '/FoodKite/App/menu/submenu/'.$submenu['SubMenuId'].'/'.$submenu['PlaceId']."/" ?>" data-transition="slide"><?php echo $submenu["SubMenu"] ?></a>
+						<a href="<?php echo '/FoodKite/App/menu/submenu/'.$submenu['SubMenuId'].'/'.$submenu['PlaceId']."/" ?>" data-transition="slide"><?php echo $submenu["Name"] ?></a>
 						<span class="ui-li-count" ><?php echo $submenu["DishCount"] ?></span>
 				</li>				
 				<?php } ?>

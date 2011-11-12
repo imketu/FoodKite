@@ -90,7 +90,7 @@ class FoursquareApi {
 		
 		// Populate data for the GET request
 		if($type == HTTP_GET) $url = $this->MakeUrl($url,$params);
-
+		//var_dump($url); echo "<br/><br/><hr/>";die(); 
 		// borrowed from Andy Langton: http://andylangton.co.uk/
 		$ch = curl_init();
 		curl_setopt($ch, CURLOPT_URL,$url);
@@ -146,7 +146,7 @@ class FoursquareApi {
 	public function GeoLocate($addr){
 		$geoapi = "http://maps.googleapis.com/maps/api/geocode/json";
 		$params = array("address"=>$addr,"sensor"=>"false");
-		$response = $this->GET($geoapi,$params);
+		$response = $this->GET($geoapi,$params); 
 		$json = json_decode($response);
 		if ($json->status === "ZERO_RESULTS") {			
 			return NULL;
