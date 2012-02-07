@@ -120,7 +120,7 @@ $discoverPlace = function() use ($app,$getAllPlaceData){
 //======================================
 $app->get('/place/discovery/(:lat/:long/)', $authenticateUsers, $discoverPlace, function () use ($app){
 	$logoutUrl = $app->facebook->getLogoutUrl();
-	$app->render('placeDiscovery.php', array("title"=> "Places near you", "logoutUrl" => $logoutUrl, "places" => $app->data, "navbarValue" => 1) );
+	$app->render('placeDiscovery.php', array("title"=> "Menu's near you", "logoutUrl" => $logoutUrl, "places" => $app->data, "navbarValue" => 1) );
 });
 
 
